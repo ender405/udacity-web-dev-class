@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+
+
+<html>
+
+    <head>
+    	<title>My Basic Blog</title>
+    	<style type="text/css">
+    	    
+    	    div.banner {color : black;
+    	                font-size : 50px;
+    	                margin-left : 50px;
+    	                padding-bottom: 30px;}
+    	    	    
+    	    div.post-title {color: blue;
+    	    	           text-align: left;
+    	                   font-size: 20px;
+    	                   width: 70%;
+    	                   border-bottom: 1px solid gray;
+    	                   margin-left : 50px;
+    	                   margin-bottom: 5px;
+    	                   padding-bottom : 2px;}
+
+    	    span.post-created {color: gray;
+    	                   font-size: 15px;
+    	                   font-style: italic;
+    	                   width: 70%;
+    	                   float: right;
+    	                   text-align: right;
+    	                   margin-bottom: 5px;
+    	                   padding-bottom : 2px;
+    	                   padding-top: 5px;}
+
+    	    div.post-text {color: black;
+    	                   font-size: 15px;
+    	                   margin-left : 50px;
+    	                   width: 70%;
+    	                   padding-bottom: 15px;}
+    	    
+    	    div.error {color: red;
+    	                   font-size: 15px;
+    	                   margin-left : 50px;}
+    	</style>
+    </head>
+
+    <body>
+
+    	<div class="banner">
+    		Latest Blog Posts:
+    	</div>
+
+    	{% for post in posts %}
+
+    	<div class="post-title">
+    		<a href="/unit3/blog/{{post.key().id()}}">{{post.subject}}</a>
+    		<span class="post-created">Posted on: {{post.created.date()}} at {{post.created.strftime("%X")}}</span>
+    	</div>
+
+    	<div class="post-text">
+    		{{post.content}}
+    	</div>
+
+    	{% endfor %}
+
+    	<div class="error">
+    		{{error}}
+    	</div>
+
+    </body>
+</html>
+

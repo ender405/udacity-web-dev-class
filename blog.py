@@ -1,9 +1,10 @@
 import os
 import re
 from string import letters
-
+import time
 import webapp2
 import jinja2
+import logging
 
 from google.appengine.ext import db
 
@@ -17,7 +18,7 @@ def render_str(template, **params):
 
 class BaseHandler(webapp2.RequestHandler):
     def render(self, template, **kw):
-        self.response.out.write(render_str(template, **kw))
+        self.write(render_str(template, **kw))
 
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
@@ -90,7 +91,64 @@ class Welcome(BaseHandler):
         else:
             self.redirect('/unit2/signup')
 
+class Post(db.Model):   
+    subject = db.StringProperty(required=True)
+    content = db.TextProperty(required=True)
+    created = db.DateTimeProperty(auto_now_add=True)
+
+#create a sample post
+# p = Post()
+# p.subject = "Sample subject"
+# p.content = "This is my text"
+# p.put()
+
+
+class Blog(BaseHandler):
+
+    def render_front(self, subject="", content="", error=""):
+       posts = Post.gql("ORDER BY created DESC LIMIT 10")
+       self.render("blog_front.html", subject = subject, content = content, error = error, posts = posts)
+
+    def get(self):
+        self.render_front()
+
+    def post(self):
+        self.render_front()
+
+
+class DisplayPost(BaseHandler):
+    def get(self, post_id):
+        post_id = int(self.request.path.replace('/unit3/blog/', ""))
+        post = Post.get_by_id(post_id)
+        subject = post.subject
+        content = post.content
+        created = post.created
+        self.render("blog_display.html", subject=subject, content=content, created=created)
+
+
+class NewPost(BaseHandler):
+
+    def get(self):
+        self.render("blog_post.html", subject="", content="", error="")
+
+    def post(self):
+        subject = self.request.get("subject")
+        content = self.request.get("content")
+
+        if subject and content:
+            p = Post(subject=subject, content=content)
+            p.put()
+            post_id = p.key().id()
+            self.redirect('/unit3/blog/%s' % post_id)
+        else:
+            error = "You must include both a subject and content to submit a post!"
+            self.render('blog_post.html', subject = subject, content = content, error = error)
+
+
 app = webapp2.WSGIApplication([('/unit2/rot13', Rot13),
                                ('/unit2/signup', Signup),
-                               ('/unit2/welcome', Welcome)],
+                               ('/unit2/welcome', Welcome),
+                               ('/unit3/blog', Blog),
+                               ('/unit3/blog/newpost', NewPost),
+                               ('/unit3/blog/(\d+)', DisplayPost)],
                               debug=True)
