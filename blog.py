@@ -130,7 +130,7 @@ class Login(BaseHandler):
             if valid_pw(username, password, user.pw_hash + "," + user.salt):
                 secure_val = make_secure_val(str(user_id))
                 self.response.delete_cookie('user_id')
-                self.response.set_cookie('user_id', secure_val, max_age=15, path='/')
+                self.response.set_cookie('user_id', secure_val, max_age=24*60*60, path='/')
                 self.redirect('/unit3/blog/welcome')
             else:
                 self.render("login.html", error_login="Not a valid login")
