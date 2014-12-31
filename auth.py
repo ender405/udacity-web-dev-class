@@ -8,6 +8,8 @@ import hashlib
 def make_salt():
     return ''.join(random.choice(string.letters) for x in xrange(5))
 
+
+#pw hash is in the format of a tuple (hash, salt)
 def make_pw_hash(name, pw, salt = None):
     if not salt:
     	salt = make_salt()
@@ -16,7 +18,7 @@ def make_pw_hash(name, pw, salt = None):
     return '%s,%s' % (h, salt)
 
 def valid_pw(name, pw, h):
-    array = h.split(',')    
+    array = h.split(',')
     if hashlib.sha256(name + pw + array[1]).hexdigest() == array[0]:
         return True
     else:

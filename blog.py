@@ -105,6 +105,37 @@ class Signup(BaseHandler):
             self.response.headers.add_header('Set-Cookie', 'user_id=%s; Path=/' % secure_val)
             self.redirect('/unit3/blog/welcome')
 
+class Login(BaseHandler):
+    def get(self):
+        self.render("login.html")
+
+
+    def post(self):
+
+        username = self.request.get('username')
+        password = self.request.get('password')
+
+        def username_exists(username):        
+            q = User.all()
+            for user in q:
+                if user.name == username:
+                    return user.key().id() #then it is in the database
+            return False
+
+        user_id = username_exists(username)
+
+        if user_id == False:
+            self.render("login.html", error_login="Not a valid login")
+        else:
+            user = User.get_by_id(user_id)
+            if valid_pw(username, password, user.pw_hash + "," + user.salt):
+                secure_val = make_secure_val(str(user_id))
+                self.response.headers.add_header('Set-Cookie', 'user_id=%s; Path=/' % secure_val)
+                self.redirect('/unit3/blog/welcome')
+            else:
+                self.render("login.html", error_login="Not a valid login")
+
+
 class Welcome(BaseHandler):
     def get(self):
         #username = self.request.get('username')   This is no longer relevant
@@ -179,5 +210,6 @@ app = webapp2.WSGIApplication([('/unit2/rot13', Rot13),
                                ('/unit3/blog', Blog),
                                ('/unit3/blog/newpost', NewPost),
                                ('/unit3/blog/(\d+)', DisplayPost),
+                               ('/unit3/blog/login', Login),
                                ('/unit3/blog/signup', Signup)],
                               debug=True)
