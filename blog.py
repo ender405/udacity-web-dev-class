@@ -35,6 +35,12 @@ class BaseHandler(webapp2.RequestHandler):
                     verify = verify, 
                     email = email)
 
+    def login(self, secure_val):
+        self.response.delete_cookie('user_id')
+        self.response.set_cookie('user_id', secure_val, max_age=24*60*60, path='/')
+        self.redirect('/blog/welcome')
+
+
 
 class Rot13(BaseHandler):
     def get(self):
@@ -90,25 +96,11 @@ class Signup(BaseHandler):
         if have_error:
             self.render('signup-form.html', **params)
         else:
-            
-            #create the salt and password hash with make_pw_hash
             hashed_pw = make_pw_hash(req['username'], req['password'], None)
-
-            #create the User object w/ name and email and the salt and password hash
-            u = User(name=req['username'], email=req['email'], salt=hashed_pw.split(",")[1], pw_hash=hashed_pw.split(",")[0])
-
-            #save the new User object
+            u = User.register(req['username'], req['email'], hashed_pw.split(',')[1], hashed_pw.split(',')[0])
             u.put()
-
-            #pull his user id from the newly created object
-            user_id = str(u.key().id())
-
-            #feed it into make_secure_val to get the formatted cookie with a pipe in between the user_id
-            secure_val = make_secure_val(user_id)
-
-            #set the cookie with user_id | hashed string (will need to get the user_id for the page render from the cookie set in the WelcomeHandler)
-            self.response.headers.add_header('Set-Cookie', 'user_id=%s; Path=/' % secure_val)
-            self.redirect('/blog/welcome')
+            secure_val = make_secure_val(str(u.key().id()))
+            self.login(secure_val)
 
 class Login(BaseHandler):
     def get(self):
@@ -123,9 +115,7 @@ class Login(BaseHandler):
         else:
             if valid_pw(req['username'], req['password'], user.pw_hash + "," + user.salt):
                 secure_val = make_secure_val(str(user.key().id()))
-                self.response.delete_cookie('user_id')
-                self.response.set_cookie('user_id', secure_val, max_age=24*60*60, path='/')
-                self.redirect('/blog/welcome')
+                self.login(secure_val)
             else:
                 self.render("login.html", error_login="Not a valid login")
 
@@ -137,7 +127,7 @@ class Logout(BaseHandler):
         cookie = self.request.cookies.get("user_id")
 
         if check_secure_val(cookie):
-            self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
+            self.response.delete_cookie('user_id')
             self.redirect('/signup')
         else:
             self.render('signup-form.html')
@@ -177,6 +167,10 @@ class User(db.Model):
     def by_name(cls, name):
         user = User.all().filter('name =', name).get()
         return user
+
+    @classmethod
+    def register(cls, name, email, salt, pw_hash):
+        return User(name=name, email=email, salt=salt, pw_hash=pw_hash)
 
 
 class Blog(BaseHandler):
