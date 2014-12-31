@@ -140,8 +140,14 @@ class Logout(BaseHandler):
         self.render('logout.html')
 
     def post(self):
-        self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
-        self.redirect('/unit3/blog/signup')
+        cookie = self.request.cookies.get("user_id")
+
+        if check_secure_val(cookie):
+            self.resp   onse.headers.add_header('Set-Cookie', 'user_id=; Path=/')
+            self.redirect('/unit3/blog/signup')
+        else:
+            self.render('signup-form.html')
+
 
 class Welcome(BaseHandler):
     def get(self):
