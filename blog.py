@@ -59,11 +59,12 @@ class Signup(BaseHandler):
             have_error = True
 
         def unique_username(username):        
-            q = User.all().filter('name=', username)
-            if q.get():
-                return True
-            else:
-                return False
+            q = User.all()
+            for user in q:
+                if user.name == username:
+                    return False #then it is not a unique username
+            return True
+
 
         if not unique_username(username):
             params['error_username'] = "That username already exists."
