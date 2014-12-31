@@ -143,8 +143,8 @@ class Logout(BaseHandler):
         cookie = self.request.cookies.get("user_id")
 
         if check_secure_val(cookie):
-            self.resp   onse.headers.add_header('Set-Cookie', 'user_id=; Path=/')
-            self.redirect('/unit3/blog/signup')
+            self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
+            self.redirect('/unit3/signup')
         else:
             self.render('signup-form.html')
 
@@ -160,7 +160,7 @@ class Welcome(BaseHandler):
             username = user.name
             self.render('welcome.html', username = username)
         else:
-            self.redirect('/unit3/blog/signup')
+            self.redirect('/unit3/signup')
 
 class Post(db.Model):   
     subject = db.StringProperty(required=True)
@@ -223,7 +223,7 @@ app = webapp2.WSGIApplication([('/unit2/rot13', Rot13),
                                ('/unit3/blog', Blog),
                                ('/unit3/blog/newpost', NewPost),
                                ('/unit3/blog/(\d+)', DisplayPost),
-                               ('/unit3/blog/login', Login),
-                               ('/unit3/blog/logout', Logout),
-                               ('/unit3/blog/signup', Signup)],
+                               ('/unit3/login', Login),
+                               ('/unit3/logout', Logout),
+                               ('/unit3/signup', Signup)],
                               debug=True)
