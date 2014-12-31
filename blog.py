@@ -103,7 +103,7 @@ class Signup(BaseHandler):
 
             #set the cookie with user_id | hashed string (will need to get the user_id for the page render from the cookie set in the WelcomeHandler)
             self.response.headers.add_header('Set-Cookie', 'user_id=%s; Path=/' % secure_val)
-            self.redirect('/unit3/blog/welcome')
+            self.redirect('/blog/welcome')
 
 class Login(BaseHandler):
     def get(self):
@@ -131,7 +131,7 @@ class Login(BaseHandler):
                 secure_val = make_secure_val(str(user_id))
                 self.response.delete_cookie('user_id')
                 self.response.set_cookie('user_id', secure_val, max_age=24*60*60, path='/')
-                self.redirect('/unit3/blog/welcome')
+                self.redirect('/blog/welcome')
             else:
                 self.render("login.html", error_login="Not a valid login")
 
@@ -144,7 +144,7 @@ class Logout(BaseHandler):
 
         if check_secure_val(cookie):
             self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
-            self.redirect('/unit3/signup')
+            self.redirect('/signup')
         else:
             self.render('signup-form.html')
 
@@ -160,7 +160,7 @@ class Welcome(BaseHandler):
             username = user.name
             self.render('welcome.html', username = username)
         else:
-            self.redirect('/unit3/signup')
+            self.redirect('/signup')
 
 class Post(db.Model):   
     subject = db.StringProperty(required=True)
@@ -191,7 +191,7 @@ class Blog(BaseHandler):
 
 class DisplayPost(BaseHandler):
     def get(self, post_id):
-        post_id = int(self.request.path.replace('/unit3/blog/', ""))
+        post_id = int(self.request.path.replace('/blog/', ""))
         post = Post.get_by_id(post_id)
         subject = post.subject
         content = post.content
@@ -212,18 +212,18 @@ class NewPost(BaseHandler):
             p = Post(subject=subject, content=content)
             p.put()
             post_id = p.key().id()
-            self.redirect('/unit3/blog/%s' % post_id)
+            self.redirect('/blog/%s' % post_id)
         else:
             error = "You must include both a subject and content to submit a post!"
             self.render('blog_post.html', subject = subject, content = content, error = error)
 
 
 app = webapp2.WSGIApplication([('/unit2/rot13', Rot13),
-                               ('/unit3/blog/welcome', Welcome),
-                               ('/unit3/blog', Blog),
-                               ('/unit3/blog/newpost', NewPost),
-                               ('/unit3/blog/(\d+)', DisplayPost),
-                               ('/unit3/login', Login),
-                               ('/unit3/logout', Logout),
-                               ('/unit3/signup', Signup)],
+                               ('/blog/welcome', Welcome),
+                               ('/blog', Blog),
+                               ('/blog/newpost', NewPost),
+                               ('/blog/(\d+)', DisplayPost),
+                               ('/login', Login),
+                               ('/logout', Logout),
+                               ('/signup', Signup)],
                               debug=True)
