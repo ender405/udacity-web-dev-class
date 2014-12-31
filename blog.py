@@ -109,7 +109,6 @@ class Login(BaseHandler):
     def get(self):
         self.render("login.html")
 
-
     def post(self):
 
         username = self.request.get('username')
@@ -130,7 +129,8 @@ class Login(BaseHandler):
             user = User.get_by_id(user_id)
             if valid_pw(username, password, user.pw_hash + "," + user.salt):
                 secure_val = make_secure_val(str(user_id))
-                self.response.headers.add_header('Set-Cookie', 'user_id=%s; Path=/' % secure_val)
+                self.response.delete_cookie('user_id')
+                self.response.set_cookie('user_id', secure_val, max_age=15, path='/')
                 self.redirect('/unit3/blog/welcome')
             else:
                 self.render("login.html", error_login="Not a valid login")
@@ -140,7 +140,7 @@ class Logout(BaseHandler):
         self.render('logout.html')
 
     def post(self):
-        self.response.headers.add_header('Set-Cookie', 'user_id=%s; Path=/' % "")
+        self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
         self.redirect('/unit3/blog/signup')
 
 class Welcome(BaseHandler):
