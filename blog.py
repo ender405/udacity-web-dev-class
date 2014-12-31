@@ -135,6 +135,13 @@ class Login(BaseHandler):
             else:
                 self.render("login.html", error_login="Not a valid login")
 
+class Logout(BaseHandler):
+    def get(self):
+        self.render('logout.html')
+
+    def post(self):
+        self.response.headers.add_header('Set-Cookie', 'user_id=%s; Path=/' % "")
+        self.redirect('/unit3/blog/login')
 
 class Welcome(BaseHandler):
     def get(self):
@@ -211,5 +218,6 @@ app = webapp2.WSGIApplication([('/unit2/rot13', Rot13),
                                ('/unit3/blog/newpost', NewPost),
                                ('/unit3/blog/(\d+)', DisplayPost),
                                ('/unit3/blog/login', Login),
+                               ('/unit3/blog/logout', Logout),
                                ('/unit3/blog/signup', Signup)],
                               debug=True)
