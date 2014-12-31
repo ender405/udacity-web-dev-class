@@ -5,6 +5,8 @@ import time
 import webapp2
 import jinja2
 import logging
+from auth import make_salt, make_pw_hash, valid_pw, hash_str, make_secure_val, check_secure_val
+from validation import valid_username, valid_password, valid_email
 
 from google.appengine.ext import db
 
@@ -36,22 +38,11 @@ class Rot13(BaseHandler):
         self.render('rot13-form.html', text = rot13)
 
 
-USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
-def valid_username(username):
-    return username and USER_RE.match(username)
-
-PASS_RE = re.compile(r"^.{3,20}$")
-def valid_password(password):
-    return password and PASS_RE.match(password)
-
-EMAIL_RE  = re.compile(r'^[\S]+@[\S]+\.[\S]+$')
-def valid_email(email):
-    return not email or EMAIL_RE.match(email)
-
 class Signup(BaseHandler):
 
     def get(self):
         self.render("signup-form.html")
+
 
     def post(self):
         have_error = False
@@ -67,9 +58,21 @@ class Signup(BaseHandler):
             params['error_username'] = "That's not a valid username."
             have_error = True
 
+        def unique_username(username):        
+            q = User.all().filter('name=', username)
+            if q.get():
+                return True
+            else:
+                return False
+
+        if not unique_username(username):
+            params['error_username'] = "That username already exists."
+            have_error = True
+
         if not valid_password(password):
             params['error_password'] = "That wasn't a valid password."
             have_error = True
+
         elif password != verify:
             params['error_verify'] = "Your passwords didn't match."
             have_error = True
@@ -81,26 +84,51 @@ class Signup(BaseHandler):
         if have_error:
             self.render('signup-form.html', **params)
         else:
-            self.redirect('/unit2/welcome?username=' + username)
+            
+            #create the salt and password hash with make_pw_hash
+            hashed_pw = make_pw_hash(username, password, None)
+
+            #create the User object w/ name and email and the salt and password hash
+            u = User(name=username, email=email, salt=hashed_pw.split(",")[1], pw_hash=hashed_pw.split(",")[0])
+
+            #save the new User object
+            u.put()
+
+            #pull his user id from the newly created object
+            user_id = str(u.key().id())
+
+            #feed it into make_secure_val to get the formatted cookie with a pipe in between the user_id
+            secure_val = make_secure_val(user_id)
+
+            #set the cookie with user_id | hashed string (will need to get the user_id for the page render from the cookie set in the WelcomeHandler)
+            self.response.headers.add_header('Set-Cookie', 'user_id=%s; Path=/' % secure_val)
+            self.redirect('/unit3/blog/welcome')
 
 class Welcome(BaseHandler):
     def get(self):
-        username = self.request.get('username')
-        if valid_username(username):
+        #username = self.request.get('username')   This is no longer relevant
+        #get cookie and use to auth and find username
+        cookie = self.request.cookies.get("user_id")
+
+        if check_secure_val(cookie):
+            user = User.get_by_id(int(cookie.split("|")[0]))
+            username = user.name
             self.render('welcome.html', username = username)
         else:
-            self.redirect('/unit2/signup')
+            self.redirect('/unit3/blog/signup')
 
 class Post(db.Model):   
     subject = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
 
-#create a sample post
-# p = Post()
-# p.subject = "Sample subject"
-# p.content = "This is my text"
-# p.put()
+class User(db.Model):
+    name = db.StringProperty(required=True)
+    email = db.StringProperty(required=False)
+    salt = db.StringProperty()
+    pw_hash = db.StringProperty()
+    pw_updated = db.DateTimeProperty()
+    created = db.DateTimeProperty(auto_now_add=True)
 
 
 class Blog(BaseHandler):
@@ -146,9 +174,9 @@ class NewPost(BaseHandler):
 
 
 app = webapp2.WSGIApplication([('/unit2/rot13', Rot13),
-                               ('/unit2/signup', Signup),
-                               ('/unit2/welcome', Welcome),
+                               ('/unit3/blog/welcome', Welcome),
                                ('/unit3/blog', Blog),
                                ('/unit3/blog/newpost', NewPost),
-                               ('/unit3/blog/(\d+)', DisplayPost)],
+                               ('/unit3/blog/(\d+)', DisplayPost),
+                               ('/unit3/blog/signup', Signup)],
                               debug=True)
