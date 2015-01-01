@@ -41,7 +41,6 @@ class BaseHandler(webapp2.RequestHandler):
         self.redirect('/blog/welcome')
 
 
-
 class Rot13(BaseHandler):
     def get(self):
         self.render('rot13-form.html')
@@ -60,12 +59,6 @@ class Signup(BaseHandler):
     def get(self):
         self.render("signup-form.html")
 
-    def unique_username(self, username):        
-            user = User.by_name(username)
-            if user:
-                return False #then it is not a unique username
-            return True
-
     def post(self):
         have_error = False
         req = self.request_params()
@@ -75,10 +68,6 @@ class Signup(BaseHandler):
 
         if not valid_username(req['username']):
             params['error_username'] = "That's not a valid username."
-            have_error = True
-
-        if not self.unique_username(req['username']):
-            params['error_username'] = "That username already exists."
             have_error = True
 
         if not valid_password(req['password']):
@@ -92,12 +81,17 @@ class Signup(BaseHandler):
         if not valid_email(req['email']):
             params['error_email'] = "That's not a valid email."
             have_error = True
+        
+        hashed_pw = make_pw_hash(req['username'], req['password'], None)
+        u = User.register(req['username'], req['email'], hashed_pw.split(',')[1], hashed_pw.split(',')[0])
+        
+        if not u.unique_username(u.name):
+            params['error_username'] = 'That username already exists.'
+            have_error = True
 
         if have_error:
             self.render('signup-form.html', **params)
         else:
-            hashed_pw = make_pw_hash(req['username'], req['password'], None)
-            u = User.register(req['username'], req['email'], hashed_pw.split(',')[1], hashed_pw.split(',')[0])
             u.put()
             secure_val = make_secure_val(str(u.key().id()))
             self.login(secure_val)
@@ -167,6 +161,13 @@ class User(db.Model):
     def by_name(cls, name):
         user = User.all().filter('name =', name).get()
         return user
+
+    @classmethod
+    def unique_username(cls, username):        
+        user = User.by_name(username)
+        if user:
+            return False #then it is not a unique username
+        return True
 
     @classmethod
     def register(cls, name, email, salt, pw_hash):
