@@ -1,0 +1,105 @@
+
+
+div.banner {color : black;
+                      font-size : 50px;
+                      margin-left : 50px;
+                      padding-bottom: 30px;}
+                
+div.post-title {color: gray;
+           text-align: left;
+             font-size: 20px;
+             width: 70%;
+             border-bottom: 1px solid gray;
+             margin-left : 50px;
+             margin-bottom: 5px;
+             padding-bottom : 2px;}
+
+span.post-created {color: gray;
+             font-size: 15px;
+             font-style: italic;
+             width: 70%;
+             float: right;
+             text-align: right;
+             margin-bottom: 5px;
+             padding-bottom : 2px;
+             padding-top: 5px;}
+
+div.post-text {color: black;
+             font-size: 15px;
+             margin-left : 50px;
+             padding-bottom: 15px;}
+
+div.banner {color : black;
+    	                font-size : 50px;
+    	                margin-left : 50px;
+    	                padding-bottom: 30px;}
+    	    	    
+div.post-title {color: blue;
+	           text-align: left;
+               font-size: 20px;
+               width: 70%;
+               border-bottom: 1px solid gray;
+               margin-left : 50px;
+               margin-bottom: 5px;
+               padding-bottom : 2px;}
+
+span.post-created {color: gray;
+               font-size: 15px;
+               font-style: italic;
+               width: 70%;
+               float: right;
+               text-align: right;
+               margin-bottom: 5px;
+               padding-bottom : 2px;
+               padding-top: 5px;}
+
+div.post-text {color: black;
+               font-size: 15px;
+               margin-left : 50px;
+               width: 70%;
+               padding-bottom: 15px;}
+
+div.error {color: red;
+               font-size: 15px;
+               margin-left : 50px;}
+
+
+div.banner {color: black;
+                           font-size: 30px;
+                           margin-left : 50px;
+                           padding-bottom: 15px;}
+
+div.subject {color: gray;
+               width : 30%;
+               font-size: 15px;
+               margin-left : 50px;
+               padding-bottom: 15px;}
+
+div.content {color: black;
+               width : 30%;
+               font-size: 15px;
+               margin-left : 50px;
+               padding-bottom: 15px;}
+
+span.text-box {margin-left: 50px;
+               font-size : 15px;
+               padding-bottom: 15px;
+               width: 300px;
+               float: right;}
+
+label.text-label {color: gray;
+               font-size: 15px;
+               margin-left : 0px;
+               float : left;}
+
+div.error {color: red;
+               font-size: 15px;
+               margin-left : 160px;}
+
+textarea {width: 300px;
+                 height: 200px;}
+
+input           {width: 300px;}
+
+input.submit          {margin-left: 155px;
+                 }

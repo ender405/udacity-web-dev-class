@@ -19,8 +19,13 @@ def render_str(template, **params):
     return t.render(params)
 
 class BaseHandler(webapp2.RequestHandler):
+    
+    def render_str(self, template, **params):
+        params['user'] = self.user_present()
+        return render_str(template, **params)
+
     def render(self, template, **kw):
-        self.write(render_str(template, **kw))
+        self.write(self.render_str(template, **kw))
 
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
@@ -46,6 +51,14 @@ class BaseHandler(webapp2.RequestHandler):
 
     def get_cookie(self):
         return self.request.cookies.get("user_id")
+
+    def user_present(self):
+        cookie = self.get_cookie()
+        if cookie:
+            if check_secure_val(cookie):
+                return User.by_cookie(cookie)
+        return None
+
 
 
 class Rot13(BaseHandler):
@@ -191,13 +204,10 @@ class Blog(BaseHandler):
     def get(self):
         self.render_front()
 
-    def post(self):
-        self.render_front()
-
-
 class DisplayPost(BaseHandler):
     def get(self, post_id):
         post_id = int(self.request.path.replace('/blog/', ""))
+        logging.info(post_id)
         post = Post.get_by_id(post_id)
         subject = post.subject
         content = post.content

@@ -1,55 +1,12 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
+  {% block content %}
+    <div class="post-title">
+      {{subject}}
+      <span class="post-created">Posted on: {{created.date()}} at {{created.strftime("%X")}}</span>
+    </div>
 
-
-<html>
-
-    <head>
-      <title>Read Post</title>
-      <style type="text/css">
-          
-          div.banner {color : black;
-                      font-size : 50px;
-                      margin-left : 50px;
-                      padding-bottom: 30px;}
-                
-          div.post-title {color: gray;
-                       text-align: left;
-                         font-size: 20px;
-                         width: 70%;
-                         border-bottom: 1px solid gray;
-                         margin-left : 50px;
-                         margin-bottom: 5px;
-                         padding-bottom : 2px;}
-
-          span.post-created {color: gray;
-                         font-size: 15px;
-                         font-style: italic;
-                         width: 70%;
-                         float: right;
-                         text-align: right;
-                         margin-bottom: 5px;
-                         padding-bottom : 2px;
-                         padding-top: 5px;}
-
-          div.post-text {color: black;
-                         font-size: 15px;
-                         margin-left : 50px;
-                         padding-bottom: 15px;}
-          
-      </style>
-    </head>
-
-    <body>
-
-      <div class="post-title">
-        {{subject}}
-        <span class="post-created">Posted on: {{created.date()}} at {{created.strftime("%X")}}</span>
-      </div>
-
-      <div class="post-text">
-        {{content}}
-      </div>
-
-    </body>
-</html>
+    <div class="post-text">
+      {{content}}
+    </div>
+  {% endblock %}
 
