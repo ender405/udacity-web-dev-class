@@ -40,6 +40,13 @@ class BaseHandler(webapp2.RequestHandler):
         self.response.set_cookie('user_id', secure_val, max_age=24*60*60, path='/')
         self.redirect('/blog/welcome')
 
+    def logout(self):
+        self.response.delete_cookie('user_id')
+        self.redirect('/signup')
+
+    def get_cookie(self):
+        return self.request.cookies.get("user_id")
+
 
 class Rot13(BaseHandler):
     def get(self):
@@ -118,11 +125,10 @@ class Logout(BaseHandler):
         self.render('logout.html')
 
     def post(self):
-        cookie = self.request.cookies.get("user_id")
+        cookie = self.get_cookie()
 
         if check_secure_val(cookie):
-            self.response.delete_cookie('user_id')
-            self.redirect('/signup')
+            self.logout()
         else:
             self.render('signup-form.html')
 
@@ -131,11 +137,9 @@ class Welcome(BaseHandler):
     def get(self):
         #username = self.request.get('username')   This is no longer relevant
         #get cookie and use to auth and find username
-        cookie = self.request.cookies.get("user_id")
-
+        cookie = self.get_cookie()
         if check_secure_val(cookie):
-            user = User.by_id(int(cookie.split("|")[0]))
-            username = user.name
+            username = User.by_cookie(cookie).name
             self.render('welcome.html', username = username)
         else:
             self.redirect('/signup')
@@ -168,6 +172,10 @@ class User(db.Model):
         if user:
             return False #then it is not a unique username
         return True
+
+    @classmethod
+    def by_cookie(cls, cookie):
+        return User.by_id(int(cookie.split("|")[0]))
 
     @classmethod
     def register(cls, name, email, salt, pw_hash):
