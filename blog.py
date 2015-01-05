@@ -5,6 +5,8 @@ import time
 import webapp2
 import jinja2
 import logging
+import datetime
+import json
 from auth import make_salt, make_pw_hash, valid_pw, hash_str, make_secure_val, check_secure_val
 from validation import valid_username, valid_password, valid_email
 
@@ -47,7 +49,7 @@ class BaseHandler(webapp2.RequestHandler):
 
     def logout(self):
         self.response.delete_cookie('user_id')
-        self.redirect('/signup')
+        self.redirect('/blog/signup')
 
     def get_cookie(self):
         return self.request.cookies.get("user_id")
@@ -155,12 +157,16 @@ class Welcome(BaseHandler):
             username = User.by_cookie(cookie).name
             self.render('welcome.html', username = username)
         else:
-            self.redirect('/signup')
+            self.redirect('/blog/signup')
 
 class Post(db.Model):   
     subject = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
+
+    @classmethod
+    def by_id(cls, uid):
+        return cls.get_by_id(uid)
 
 class User(db.Model):
     name = db.StringProperty(required=True)
@@ -233,13 +239,31 @@ class NewPost(BaseHandler):
             error = "You must include both a subject and content to submit a post!"
             self.render('blog_post.html', subject = subject, content = content, error = error)
 
+class JsonMain(Blog):
+    def get(self):
+        posts = Post.all().order("-created").fetch(10)
+        posts = [{"subject" : post.subject,"content" : post.content,"created" : post.created.isoformat()} for post in posts]
+        self.response.headers['Content-Type'] = 'application/json'
+        self.write(json.dumps(posts))
+
+
+class JsonPerm(Blog):
+    def get(self, post_id):
+        post_id = int(self.request.path.replace('/blog/', "").replace('.json', ""))
+        post = Post.by_id(post_id)
+        post = [{"subject" : post.subject,"content" : post.content,"created" : post.created.isoformat()}]
+        self.response.headers['Content-Type'] = 'application/json'
+        self.write(json.dumps(post))
+
 
 app = webapp2.WSGIApplication([('/unit2/rot13', Rot13),
-                               ('/blog/welcome', Welcome),
-                               ('/blog', Blog),
-                               ('/blog/newpost', NewPost),
-                               ('/blog/(\d+)', DisplayPost),
-                               ('/login', Login),
-                               ('/logout', Logout),
-                               ('/signup', Signup)],
-                              debug=True)
+    ('/blog/welcome', Welcome),
+    ('/blog', Blog),
+    ('/blog/newpost', NewPost),
+    ('/blog/(\d+)', DisplayPost),
+    ('/blog/login', Login),
+    ('/blog/logout', Logout),
+    ('/blog/signup', Signup),
+    ('/blog/.json', JsonMain),
+    ('/blog/(\d+).json', JsonPerm)],
+    debug=True)
