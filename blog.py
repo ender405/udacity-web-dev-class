@@ -277,6 +277,14 @@ class JsonPerm(Blog):
         self.response.headers['Content-Type'] = 'application/json'
         self.write(json.dumps(post))
 
+class Flush(BaseHandler):
+    def get(self):
+        r = memcache.flush_all()
+        if r:
+            self.redirect('/blog')
+        else:
+            self.error('404')
+
 
 app = webapp2.WSGIApplication([('/unit2/rot13', Rot13),
     ('/blog/welcome', Welcome),
@@ -287,7 +295,8 @@ app = webapp2.WSGIApplication([('/unit2/rot13', Rot13),
     ('/blog/logout', Logout),
     ('/blog/signup', Signup),
     ('/blog/.json', JsonMain),
-    ('/blog/(\d+).json', JsonPerm)],
+    ('/blog/(\d+).json', JsonPerm),
+    ('/blog/flush', Flush)],
     debug=True)
 
 # the parens in the path means it is passed in as a parameter to get and post requests
