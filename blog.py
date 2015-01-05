@@ -11,6 +11,7 @@ from auth import make_salt, make_pw_hash, valid_pw, hash_str, make_secure_val, c
 from validation import valid_username, valid_password, valid_email
 
 from google.appengine.ext import db
+from google.appengine.api import memcache
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
@@ -201,11 +202,23 @@ class User(db.Model):
         return User(name=name, email=email, salt=salt, pw_hash=pw_hash)
 
 
+def front_cache(update=False):
+    key = 'front'
+    if not memcache.get(key) or update:
+        memcache.set(key, (Post.gql("ORDER BY created DESC LIMIT 10"), datetime.datetime.now()))
+        return memcache.get(key)
+    else:
+        return memcache.get(key)
+
+
 class Blog(BaseHandler):
 
     def render_front(self, subject="", content="", error=""):
-       posts = Post.gql("ORDER BY created DESC LIMIT 10")
-       self.render("blog_front.html", subject = subject, content = content, error = error, posts = posts)
+       key = "front"
+       posts = front_cache()[0]
+       db_query = front_cache()[1]
+       time = (datetime.datetime.now() - db_query).seconds
+       self.render("blog_front.html", subject = subject, content = content, error = error, posts = posts, time = "Queried " + str(time) + " seconds ago")
 
     def get(self):
         self.render_front()
@@ -233,6 +246,7 @@ class NewPost(BaseHandler):
         if subject and content:
             p = Post(subject=subject, content=content)
             p.put()
+            front_cache(True)
             post_id = p.key().id()
             self.redirect('/blog/%s' % post_id)
         else:
@@ -258,7 +272,7 @@ class JsonPerm(Blog):
 
 app = webapp2.WSGIApplication([('/unit2/rot13', Rot13),
     ('/blog/welcome', Welcome),
-    ('/blog', Blog),
+    ('/blog/?', Blog),
     ('/blog/newpost', NewPost),
     ('/blog/(\d+)', DisplayPost),
     ('/blog/login', Login),
@@ -267,3 +281,5 @@ app = webapp2.WSGIApplication([('/unit2/rot13', Rot13),
     ('/blog/.json', JsonMain),
     ('/blog/(\d+).json', JsonPerm)],
     debug=True)
+
+# the parens in the path means it is passed in as a parameter to get and post requests
