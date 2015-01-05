@@ -210,6 +210,13 @@ def front_cache(update=False):
     else:
         return memcache.get(key)
 
+def post_cache(post_id, update=False):
+    key = str(post_id)
+    if not memcache.get(key) or update:
+        memcache.set(key, (Post.by_id(post_id), datetime.datetime.now()))
+        return memcache.get(key)
+    else:
+        return memcache.get(key)
 
 class Blog(BaseHandler):
 
@@ -226,12 +233,13 @@ class Blog(BaseHandler):
 class DisplayPost(BaseHandler):
     def get(self, post_id):
         post_id = int(self.request.path.replace('/blog/', ""))
-        logging.info(post_id)
-        post = Post.get_by_id(post_id)
+        post_tuple = post_cache(post_id)
+        post = post_tuple[0]
         subject = post.subject
         content = post.content
         created = post.created
-        self.render("blog_display.html", subject=subject, content=content, created=created)
+        time = (datetime.datetime.now() - post_tuple[1]).seconds
+        self.render("blog_display.html", subject=subject, content=content, created=created, time = "Queried " + str(time) + " seconds ago")
 
 
 class NewPost(BaseHandler):
